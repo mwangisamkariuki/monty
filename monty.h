@@ -1,12 +1,12 @@
 #ifndef MONTY_H
 #define MONTY_H
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
-
 /**
  * struct stack_s - doubly linked list representation of a stack (or queue)
  * @n: integer
@@ -22,7 +22,22 @@ typedef struct stack_s
 	struct stack_s *prev;
 	struct stack_s *next;
 } stack_t;
-
+/**
+ * struct bus_s - variables -args, file, line content
+ * @arg: value
+ * @file: pointer to monty file
+ * @content: line content
+ * @lifi: flag change stack <-> queue
+ * Description: carries values through the program
+ */
+typedef struct bus_s
+{
+	char *arg;
+	FILE *file;
+	char *content;
+	int lifi;
+}  bus_t;
+extern bus_t bus;
 /**
  * struct instruction_s - opcode and its function
  * @opcode: the opcode
@@ -36,40 +51,28 @@ typedef struct instruction_s
 	char *opcode;
 	void (*f)(stack_t **stack, unsigned int line_number);
 } instruction_t;
-
-/**
- * struct args_s - structure of arguments from main
- * @av: name of the file from the command line
- * @ac: number of arguments from main
- * @line_number: number of the current line in the file
- *
- * Description: arguments passed to main from the command line
- * used in different functions, organized in a struct for clarity
- */
-typedef struct args_s
-{
-	char *av;
-	int ac;
-	unsigned int line_number;
-} args_t;
-
-extern char *current_line;
-
-void monty(args_t *args);
-void (*get_func(char *input))(stack_t **, unsigned int);
-void push_handler(stack_t **stack, unsigned int line_number);
-void pall_handler(stack_t **stack, unsigned int line_number);
-
-/* list_funcs1.c */
-size_t dlistint_len(const dlistint_t *h);
-dlistint_t *add_dnodeint(dlistint_t **head, const int n);
-size_t print_dlistint(const dlistint_t *h);
-int delete_dnodeint_at_index(dlistint_t **head, unsigned int index);
-dlistint_t *get_dnodeint_at_index(dlistint_t *head, unsigned int index);
-
-/* list_funcs2.c */
-dlistint_t *insert_dnodeint_at_index(dlistint_t **h, unsigned int idx, int n);
-dlistint_t *add_dnodeint_end(dlistint_t **head, const int n);
-void free_dlistint(dlistint_t *head);
-
+char *_realloc(char *ptr, unsigned int old_size, unsigned int new_size);
+ssize_t getstdin(char **lineptr, int file);
+char  *clean_line(char *content);
+void f_push(stack_t **head, unsigned int number);
+void f_pall(stack_t **head, unsigned int number);
+void f_pint(stack_t **head, unsigned int number);
+int execute(char *content, stack_t **head, unsigned int counter, FILE *file);
+void free_stack(stack_t *head);
+void f_pop(stack_t **head, unsigned int counter);
+void f_swap(stack_t **head, unsigned int counter);
+void f_add(stack_t **head, unsigned int counter);
+void f_nop(stack_t **head, unsigned int counter);
+void f_sub(stack_t **head, unsigned int counter);
+void f_div(stack_t **head, unsigned int counter);
+void f_mul(stack_t **head, unsigned int counter);
+void f_mod(stack_t **head, unsigned int counter);
+void f_pchar(stack_t **head, unsigned int counter);
+void f_pstr(stack_t **head, unsigned int counter);
+void f_rotl(stack_t **head, unsigned int counter);
+void f_rotr(stack_t **head, __attribute__((unused)) unsigned int counter);
+void addnode(stack_t **head, int n);
+void addqueue(stack_t **head, int n);
+void f_queue(stack_t **head, unsigned int counter);
+void f_stack(stack_t **head, unsigned int counter);
 #endif

@@ -1,75 +1,45 @@
 #include "monty.h"
-
-char *current_line;
-
+bus_t bus = {NULL, NULL, NULL, 0};
 /**
- * monty - helper function for main function
- * @args: pointer to struct of arguments from main
- *
- * Description: opens and reads from the file
- * containing the opcodes, and calls the function
- * that will find the corresponding executing function
- */
-void monty(args_t *args)
-{
-	size_t len = 0;
-	int get = 0;
-	FILE *fptr;
-	char *line = NULL;
-	void (*code_func)(stack_t **, unsigned int);
-	stack_t *stack = NULL;
-
-	if (args->ac != 2)
-	{
-		dprintf(STDERR_FILENO, "USAGE: monty file\n");
-		exit(EXIT_FAILURE);
-	}
-	fptr = fopen(args->av, "r");
-	if (!fptr)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't open file %s\n", args->av);
-		exit(EXIT_FAILURE);
-	}
-	while (1)
-	{
-		args->line_number++;
-		get = getline(&line, &len, fptr);
-		if (get < 0)
-			break;
-		while (*line == ' ')
-			line++;
-		if (strcmp(line, "\n") == 0)
-			continue;
-		current_line = line;
-		code_func = get_func(line);
-		if (!code_func)
-		{
-			dprintf(2, "L%u: unknown instruction %s", args->line_number, line);
-			free(line);
-			exit(EXIT_FAILURE);
-		}
-		code_func(&stack, args->line_number);
-	}
-	fclose(fptr);
-	free(stack);
-}
-
-/**
- * main - entry point for monty bytecode interpreter
- * @argc: number of arguments
- * @argv: array of arguments
- *
- * Return: EXIT_SUCCESS or EXIT_FAILURE
- */
+* main - monty code interpreter
+* @argc: number of arguments
+* @argv: monty file location
+* Return: 0 on success
+*/
 int main(int argc, char *argv[])
 {
-	args_t args;
+	char *content;
+	FILE *file;
+	size_t size = 0;
+	ssize_t read_line = 1;
+	stack_t *stack = NULL;
+	unsigned int counter = 0;
 
-	args.av = argv[1];
-	args.ac = argc;
-	args.line_number = 0;
-
-	monty(&args);
-
-	return (EXIT_SUCCESS);
+	if (argc != 2)
+	{
+		fprintf(stderr, "USAGE: monty file\n");
+		exit(EXIT_FAILURE);
+	}
+	file = fopen(argv[1], "r");
+	bus.file = file;
+	if (!file)
+	{
+		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
+		exit(EXIT_FAILURE);
+	}
+	while (read_line > 0)
+	{
+		content = NULL;
+		read_line = getline(&content, &size, file);
+		bus.content = content;
+		counter++;
+		if (read_line > 0)
+		{
+			execute(content, &stack, counter, file);
+		}
+		free(content);
+	}
+	free_stack(stack);
+	fclose(file);
+return (0);
 }
